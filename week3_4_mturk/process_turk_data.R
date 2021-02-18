@@ -4,7 +4,7 @@ library(readr)
 library(dplyr)
 
 
-setwd("~/git/AIT602_Spring2021/week3_mturk/")
+setwd("~/git/AIT602_Spring2021/week3_4_mturk/")
 
 # Load the result of M-Turk
 turk1 <- read_delim("data/turk_results_1.csv", delim = ",",col_names = TRUE ) 
