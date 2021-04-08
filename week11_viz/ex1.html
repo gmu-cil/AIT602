@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>First Plotly</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+<body>
+  <p>
+    Number of Tweets per Minute (Data from "corona_tweets.csv")
+  </p>
+  <div id="chart"></div>
+</body>
+<script>
+
+Plotly.plot($('#chart')[0], [{
+  x: ["2/27/20 6:29",
+		"2/27/20 6:30",
+		"2/27/20 6:31",
+		"2/27/20 6:32",
+		"2/27/20 6:33",
+		"2/27/20 6:34",
+		"2/27/20 6:35",
+		"2/27/20 6:35",
+		"2/27/20 6:36",
+		"2/27/20 6:37",
+		"2/27/20 6:38",
+		"2/27/20 6:39",
+		"2/27/20 6:40",
+		"2/27/20 6:41",
+		"2/27/20 6:42"],
+  y: [32,
+	48,
+	34,
+	35,
+	43,
+	44,
+	42,
+	42,
+	38,
+	32,
+	26,
+	38,
+	33,
+	36,
+	19]
+}], {
+  margin: {
+    t: 0
+  }
+});
+</script>
+</html>

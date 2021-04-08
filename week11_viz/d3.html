@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<style>
+		svg {
+			background-color: lightgray;
+		}	
+		.bar {
+		  fill: blue;
+		}
+		.bar:hover {
+		  fill: yellow;
+		}
+		.text {
+		  fill: white;
+		  font-family: sans-serif
+		}
+		.arc:hover{
+			opacity: 0.5;			
+		}
+		.links line {
+		  stroke: #999;
+		  stroke-opacity: 0.6;
+		}
+
+		.nodes circle {
+		  stroke: #fff;
+		  stroke-width: 1.5px;
+		}
+
+		.nodes text {
+		  pointer-events: none;
+		  font: 10px sans-serif;
+		}
+	</style>
+
+<script>
+
+$(document).ready(function(){
+// bar chart
+
+	// Data 
+	var dataArray = [23, 13, 21, 14, 37, 15, 18, 34, 30];
+	var svg = d3.select(".bar");
+
+	// Creating bars
+	svg.selectAll("rect")
+		.data(dataArray)
+		.enter()
+		.append("rect")
+		.attr("class", "bar")
+		.attr("height", function(d, i) {return (d * 10)})
+		.attr("width","30")
+		.attr("x", function(d, i) {return (i * 50) + 25})
+		.attr("y", function(d, i) {return 400 - (d * 10)});
+
+	// Creating numbers for each bar
+	svg.selectAll("text")
+		.data(dataArray)
+		.enter()
+		.append("text")
+		.text(function(d) {return d})
+		.attr("class", "text")
+		.attr("x", function(d, i) {return (i * 50) + 30})
+		.attr("y", function(d, i) {return 420 - (d * 10)});
+
+
+	// Pie Chart
+	data = [
+		{age: "<10", population: 12},
+		{age: "10-20", population: 20},
+		{age: "20-30", population: 50},
+		{age: "40<", population: 30},
+	];
+
+	var width = 500;
+    var height = 500;
+    var radius = Math.min(width, height) / 2;
+	var color = d3.scaleOrdinal(["red", "blue", "grey", "yellow"]); // D3 way of defining an array 
+
+	var arc = d3.arc()
+	    .outerRadius(radius - 10)
+	    .innerRadius(radius - 90);
+
+	var pie = d3.pie()
+	    .sort(null)
+	    .value(function(d) { return d.population; });
+
+	var ppp = d3.select(".pie")	    
+	  	.append("g")
+	    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+	
+	var g = ppp.selectAll(".arc")
+	  .data(pie(data))
+	  .enter().append("g")
+	  .attr("class", "arc");
+
+	g.append("path")
+	  .attr("d", arc)
+	  .style("fill", function(d) { 	 
+	  	return color(d.data.age); 
+	  });
+
+	g.append("text")
+	  .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+	  .attr("dx", "-0.7em")
+	  .attr("dy", ".4em")
+	  .text(function(d) { return d.data.age; });
+
+
+	// Force-Direct Graph (just an example...). Only works at D3.V4
+	var graph = {
+	  "nodes": [
+	    {"id": "Lee", "group": 1},    
+	    {"id": "David", "group": 2},
+	    {"id": "Rachael", "group": 2},
+	    {"id": "John", "group": 3},
+	    {"id": "Tom", "group": 3},    
+	    {"id": "Peter", "group": 4}    
+	  ],
+	  "links": [
+	    {"source": "Lee", "target": "David", "value": 4},
+	    {"source": "David", "target": "Rachael", "value": 8},
+	    {"source": "John", "target": "Rachael", "value": 20},
+	    {"source": "Lee", "target": "Tom", "value": 6},
+	    {"source": "Tom", "target": "Rachael", "value": 6},
+	    {"source": "Peter", "target": "Lee", "value": 9}    
+	  ]
+	}
+
+	var svg = d3.select(".graph"),
+	    width = +svg.attr("width"),
+	    height = +svg.attr("height");
+
+	var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+	var simulation = d3.forceSimulation()
+	    .force("link", d3.forceLink().id(function(d) { return d.id; }))
+	    .force("charge", d3.forceManyBody())
+	    .force("center", d3.forceCenter(width / 2, height / 2));
+
+	var link = svg.append("g")
+		.attr("class", "links")
+		.selectAll("line")
+		.data(graph.links)
+		.enter().append("line")
+		.attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+	var node = svg.selectAll(".node")
+        .data(graph.nodes)
+        .enter()
+        .append("g")
+        .attr("class", "node")
+        .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended)
+        );
+
+	node.append("circle").attr("r", 5)
+        .style("fill", function (d, i) {return color(d.group);})
+
+	node.append("title")
+	  .text(function(d) { return d.id; });
+
+	node.append("text")
+            .attr("dy", -3)
+            .text(function (d) {return d.id;});
+
+	simulation
+	  .nodes(graph.nodes)
+	  .on("tick", ticked);
+
+	simulation.force("link")
+	  .links(graph.links)
+	  .distance([100]);
+
+	function ticked() {
+		link.attr("x1", function(d) { return d.source.x; })
+		    .attr("y1", function(d) { return d.source.y; })
+		    .attr("x2", function(d) { return d.target.x; })
+		    .attr("y2", function(d) { return d.target.y; });
+
+		node.attr("transform", function (d) {
+			return "translate(" + d.x + ", " + d.y + ")";
+		});
+	}
+
+	function dragstarted(d) {
+		if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+		d.fx = d.x;
+		d.fy = d.y;
+	}
+
+	function dragged(d) {
+		d.fx = d3.event.x;
+		d.fy = d3.event.y;
+	}
+
+	function dragended(d) {
+		if (!d3.event.active) simulation.alphaTarget(0);
+		d.fx = null;
+		d.fy = null;
+	}
+});
+
+</script>
+</head>
+
+<body>
+
+<svg class="bar" width="500" height="420"> </svg>
+<svg class="pie" width="500" height="500"> </svg>
+<svg class="graph" width="500" height="500"> </svg>
+
+</body>
+</html>
