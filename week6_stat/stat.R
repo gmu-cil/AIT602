@@ -5,7 +5,7 @@ library(dplyr)
 library(reshape2)
 library(PerformanceAnalytics)
 library(rtweet)
-library(sm)
+# library(sm)
 library(car)
 library(rstan)
 
@@ -26,9 +26,12 @@ summary(data$source)
 
 #############
 # 3. Numbers of favorites, retweets, and text length distribution
-hist(data$favorite_count)
-hist(data$retweet_count)
-hist(data$display_text_width)
+par(mfrow=c(1,1))
+hist(data$favorite_count, breaks=100)
+hist(log(data$favorite_count+1), breaks=100)
+hist(data$retweet_count, breaks=100)
+hist(log(data$retweet_count+1), breaks=100)
+hist(data$display_text_width, breaks=100)
 
 # denstiy graph
 d <- density(data$display_text_width)
@@ -115,13 +118,13 @@ library(rstanarm)
 
 data$random <- sample(1:100, nrow(data), replace = T)
 model <- stan_lm(random ~ display_text_width + favorite_count + retweet_count, 
-            data = data, prior = R2(0.5), seed = 100)
+            data = data, prior = R2(0.5), seed = 156)
 summary(model)
 stan_plot(model)
 
 #another...
 ret <- stan_lm(display_text_width ~ random + favorite_count + retweet_count, data=data, 
-                              prior = R2(0.5), seed = 100)
+                              prior = R2(0.5), seed = 200)
 summary(ret)
 stan_plot(ret)
 
