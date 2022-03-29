@@ -7,8 +7,9 @@ library(topicmodels)
 library(tidytext)
 library(text2vec)
 library(SnowballC)
+library(LDAvis)
 
-setwd("~/git/AIT602_Spring2021/week9_content_analysis/data")
+setwd("~/git/AIT602/week9_content_analysis/data")
 
 get_tokens <- function (df){
   data("stop_words")
@@ -50,9 +51,9 @@ castdtm <- tweets %>% count(status_id, word) %>% cast_dtm(status_id, word, n)
 result <- FindTopicsNumber(
   castdtm,
   topics = round(seq(1, 15, 1)),
-  metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
+  metrics = c("Arun2010", "Deveaud2014"),
   method = "Gibbs",
-  control = list(seed = 123),
+  control = list(seed = 12),
   mc.cores = 10L,
   verbose = TRUE
 )
