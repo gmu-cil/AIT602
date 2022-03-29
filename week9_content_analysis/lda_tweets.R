@@ -68,7 +68,7 @@ FindTopicsNumber_plot(result)
 
 
 # LDA Viz
-k = 5
+k = 4
 a = 0.1
 t = 0.01
 lda_model = LDA$new(n_topics = k, doc_topic_prior = a, topic_word_prior = t)
