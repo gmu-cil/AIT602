@@ -33,3 +33,7 @@ ggraph (links, layout="kk") +
   geom_node_point() +
   # geom_node_text(aes(label = name))+ #if you want to display User ID
   theme_graph() 
+
+# PageRank
+pr <- page_rank (net, vids=V(net))
+pr$vector
