@@ -13,18 +13,20 @@ library(DescTools)
 library(diverse)
 library(tidyr)
 
-setwd("~/git/AIT602_Spring2021/week12_diversity")
+setwd("~/git/AIT602/week12_diversity")
 
 # Function that processes the Census data file.
 extract_cities <- function (path){
   data <- read_delim(path, delim = ",",col_names = TRUE)
-  data[1,] <- gsub("; ", "_", data[1,])
-  data[1,] <- gsub(" ", "_", data[1,])
-  data[1,] <- gsub(":", "", data[1,])
-  data[1,] <- gsub("_-_", "-", data[1,])
+  # data[1,] <- gsub("; ", "_", data[1,])
+  # data[1,] <- gsub(" ", "_", data[1,])
+  # data[1,] <- gsub(":", "", data[1,])
+  # data[1,] <- gsub("_-_", "-", data[1,])
+  # colnames(data) <- data[1,]
   colnames(data) <- data[1,]
   data <- data[-1,]
   data<- data[,-which(str_detect(colnames(data), "Error"))]
+  
   return (data)
 }
 
