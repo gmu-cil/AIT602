@@ -100,3 +100,6 @@ race$rao.stirling[race$city=="Washington, DC--VA--MD Urbanized Area (2010)"]
 race$HHI[race$city=="New York--Newark, NY--NJ--CT Urbanized Area (2010)"]
 race$rao.stirling[race$city=="New York--Newark, NY--NJ--CT Urbanized Area (2010)"]
 
+hist(race$HHI, breaks=100)
+
+
