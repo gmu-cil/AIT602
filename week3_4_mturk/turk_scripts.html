@@ -1,0 +1,58 @@
+<!-- You must include this JavaScript file -->
+<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+
+<!-- For the full list of available Crowd HTML Elements and their input/output documentation,
+      please refer to https://docs.aws.amazon.com/sagemaker/latest/dg/sms-ui-template-reference.html -->
+
+<!-- You must include crowd-form so that your task submits answers to MTurk -->
+<crowd-form answer-format="flatten-objects">
+
+    <!-- The crowd-classifier element will create a tool for the Worker to select the
+           correct answer to your question -->
+    <crowd-classifier 
+      name="equal"
+      categories="['City A', 'City B']"
+      header="Which city is more beautiful?"
+    >
+        <classification-target>
+            <div>
+                <h3>City A</h3>
+	      	<p>
+                    <strong>Title: </strong>
+                   <!-- The first item's title will be substituted for the "item1_title" variable below 
+                          when you publish a batch with a CSV input file containing multiple item comparisons -->
+                    ${city_A}
+            </p>
+	    </div>
+	    <hr/>
+            <div>
+                <h3>City B</h3>
+	      	<p>
+                    <strong>Title: </strong>
+                   <!-- The second item's title will be substituted for the "item2_title" variable below when you 
+                         publish a batch with a CSV input file containing multiple item comparisons -->
+                    ${city_B}
+                </p>
+	    </div>
+      </classification-target>
+
+       <!-- Use the short-instructions section for quick instructions that the Worker
+              will see while working on the task. Including some basic examples of 
+              good and bad answers here can help get good results. You can include 
+              any HTML here. -->
+        <short-instructions>
+        Which city is more beautiful?
+      </short-instructions>
+
+      <!-- Use the full-instructions section for more detailed instructions that the 
+            Worker can open while working on the task. Including more detailed 
+            instructions and additional examples of good and bad answers here can
+            help get good results. You can include any HTML here. -->
+      <full-instructions>
+        <p>Read the task carefully and inspect the items.</p>
+        <p>Select the city that is more beautiful than the other.</p>
+
+      </full-instructions>
+
+    </crowd-classifier>
+</crowd-form>

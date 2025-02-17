@@ -1,7 +1,7 @@
 
 # 6 U.S. cities
 # Population Ranking: 1,2,3, 20,21,22
-setwd("~/git/AIT602_Spring2021/week3_4_mturk/")
+setwd("~/git/AIT602/week3_4_mturk/")
 target_cities <- c("New York, NY", "Los Angeles, CA", "Chicago, IL", "Washington, DC", "Boston, MA", "El Paso, TX")
 
 turk <- as.data.frame(matrix(ncol =3, nrow=0))
