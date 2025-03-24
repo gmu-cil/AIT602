@@ -11,7 +11,7 @@ library(PerformanceAnalytics)
 #### Each group did a different type of exercise
 
 
-setwd("~/git/AIT602_Spring2021/week5_experiments/")
+setwd("~/git/AIT602/week5_experiments/")
 
 ####################
 #    Exercise 1: Load the data. 
