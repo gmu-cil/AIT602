@@ -22,14 +22,14 @@ net = graph_from_data_frame(links, vertices = users, directed = T)
 
 # Centrality measures
 bet <- betweenness(net, v = V(net), directed = TRUE, weights = NULL,
-            nobigint = TRUE, normalized = FALSE)
+            normalized = FALSE)
 close <- closeness(net, vids = V(net), mode = "all", 
                    weights = NULL, normalized = FALSE)
 users$betweenness <- bet
 users$closeness <- close
 
-ggraph (links, layout="auto") +
-  geom_edge_link(arrow = arrow(length = unit(2, 'mm'))) +
+ggraph (links, layout="nicely") +
+  geom_edge_link(arrow = arrow(length = unit(1, 'mm'))) +
   geom_node_point() +
   # geom_node_text(aes(label = name))+ #if you want to display User ID
   theme_graph() 
