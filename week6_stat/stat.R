@@ -39,8 +39,8 @@ plot(d)
 polygon(d, col="red")
 
 # Not normal...
-shapiro.test(data$favorite_count)
-shapiro.test(data$retweet_count)
+shapiro.test(log(data$favorite_count+1))
+shapiro.test(log(data$retweet_count+1))
 shapiro.test(data$display_text_width)
 
 #############
@@ -72,8 +72,9 @@ summary(aov(retweet_count ~ source, data=data))
 ########
 # 6. Linear Regressions
 fav <- lm(favorite_count ~ display_text_width, data=data)
-ret <- lm(retweet_count ~ display_text_width, data=data)
 summary(fav)
+
+ret <- lm(retweet_count ~ display_text_width, data=data)
 summary(ret)
 
 # plot 1: Residuals vs Fitted: showing linear or non-linear relationship (line needs to be straight)
@@ -94,6 +95,10 @@ car::vif(just_test) # it's safe from multicolinearity issue
 fav_bench <- rnorm(500, mean=mean(data$favorite_count), sd=sd(data$favorite_count))
 ret_bench <- rnorm(500, mean=mean(data$retweet_count), sd=sd(data$retweet_count))
 width_bench <- rnorm(500, mean=mean(data$display_text_width), sd=sd(data$display_text_width))
+
+hist(fav_bench, breaks=100)
+hist(width_bench, breaks=100)
+
 fav_lm <- lm(fav_bench ~ width_bench)
 summary(fav_lm)
 ret_lm <- lm(ret_bench ~ width_bench)
