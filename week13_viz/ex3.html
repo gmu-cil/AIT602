@@ -1,99 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Third Plotly</title>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <title>Ex3 — Interactive Filter (Plotly)</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="data/data.js"></script>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; color: #222; }
+    h1 { font-size: 1.4rem; }
+    p.note { color: #555; font-size: 0.95rem; }
+    .controls { margin: 12px 0 18px; }
+    label { font-weight: 600; }
+    select { font-size: 1rem; padding: 4px 8px; }
+  </style>
 </head>
 <body>
-  <p>
-    Third Plotly chart - DropDown
-  </p>
-	<div class="bubbleplot" data-num="0">
-			<div class="chart" id="chart"></div>
-			<div class="control-row">
-					Country: <select class="countrydata">
-					</select>
-			</div>
-	</div>
-</body>
+  <h1>Filter by hashtag</h1>
+  <p class="note">Pick a hashtag to redraw the time series. Demonstrates dynamic data filtering with a dropdown.</p>
+
+  <div class="controls">
+    <label for="hashtag-select">Hashtag:</label>
+    <select id="hashtag-select"></select>
+  </div>
+
+  <div id="chart" style="width:100%; height:460px;"></div>
+
 <script>
-Plotly.d3.csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminderDataFiveYear.csv', function(err, rows){
+const rows = CORONA_TWEETS.map(d => ({
+  timestamp: new Date(d.timestamp),
+  hashtag: d.hashtag,
+  tweet_count: +d.tweet_count,
+  avg_sentiment: +d.avg_sentiment
+}));
 
-    function unpack(rows, key) {
-        return rows.map(function(row) { return row[key]; });
+const hashtags = Array.from(new Set(rows.map(d => d.hashtag))).sort();
+const select = document.getElementById("hashtag-select");
+for (const h of hashtags) {
+  const opt = document.createElement("option");
+  opt.value = h;
+  opt.textContent = h;
+  select.appendChild(opt);
+}
+
+function draw(hashtag) {
+  const subset = rows.filter(d => d.hashtag === hashtag)
+                     .sort((a, b) => a.timestamp - b.timestamp);
+  const traces = [
+    {
+      x: subset.map(d => d.timestamp),
+      y: subset.map(d => d.tweet_count),
+      name: "Tweets / 30 min",
+      mode: "lines+markers",
+      type: "scatter",
+      yaxis: "y1"
+    },
+    {
+      x: subset.map(d => d.timestamp),
+      y: subset.map(d => d.avg_sentiment),
+      name: "Avg sentiment",
+      mode: "lines",
+      type: "scatter",
+      yaxis: "y2",
+      line: { dash: "dot" }
     }
+  ];
+  const layout = {
+    title: `${hashtag} — volume and sentiment over time`,
+    xaxis: { title: "Time" },
+    yaxis: { title: "Tweets / 30 min", side: "left" },
+    yaxis2: { title: "Sentiment", overlaying: "y", side: "right",
+              zeroline: true, zerolinecolor: "#bbb" },
+    margin: { t: 50, r: 60, b: 50, l: 60 },
+    legend: { orientation: "h", y: -0.2 }
+  };
+  Plotly.react("chart", traces, layout, { responsive: true });
+}
 
-    var allCountryNames = unpack(rows, 'country'),
-        allYear = unpack(rows, 'year'),
-        allGdp = unpack(rows, 'gdpPercap'),
-        listofCountries = [],
-        currentCountry,
-        currentGdp = [],
-        currentYear = [];
-
-    for (var i = 0; i < allCountryNames.length; i++ ){
-        if (listofCountries.indexOf(allCountryNames[i]) === -1 ){
-            listofCountries.push(allCountryNames[i]);
-        }
-    }
-
-    function getCountryData(chosenCountry) {
-        currentGdp = [];
-        currentYear = [];
-        for (var i = 0 ; i < allCountryNames.length ; i++){
-            if ( allCountryNames[i] === chosenCountry ) {
-                currentGdp.push(allGdp[i]);
-                currentYear.push(allYear[i]);
-            }
-        }
-    };
-
-    // Default Country Data
-    setBubblePlot('Afghanistan');
-
-    function setBubblePlot(chosenCountry) {
-        getCountryData(chosenCountry);
-
-        var trace1 = {
-            x: currentYear,
-            y: currentGdp,
-            mode: 'lines+markers',
-            marker: {
-                size: 12,
-                opacity: 0.5
-            }
-        };
-
-        var data = [trace1];
-
-        var layout = {
-            title:'Line and Scatter Plot',
-            height: 400,
-            width: 480
-        };
-
-        Plotly.newPlot('chart', data, layout);
-    };
-
-		var countrySelector = $('.countrydata')[0];
-
-    function assignOptions(textArray, selector) {
-
-        $.each(textArray, function(i,t) {
-            selector.append(new Option(t, t));
-        })
-
-    }
-
-    assignOptions(listofCountries, countrySelector);
-
-    function updateCountry(){
-        setBubblePlot(countrySelector.value);
-    }
-
-    countrySelector.addEventListener('change', updateCountry, false);
-});
+draw(hashtags[0]);
+select.addEventListener("change", e => draw(e.target.value));
 </script>
+</body>
 </html>

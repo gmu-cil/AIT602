@@ -1,180 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>2nd Plotly</title>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <title>Ex2 — Statistical Visualization (Plotly)</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="data/data.js"></script>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; max-width: 1100px; margin: 24px auto; padding: 0 16px; color: #222; }
+    h1 { font-size: 1.4rem; }
+    p.note { color: #555; font-size: 0.95rem; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 800px) { .row { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
-  <p>
-    Fourth Plotly chart
+  <h1>Distributions and relationships</h1>
+  <p class="note">
+    Two charts research papers actually use:
+    <strong>(left)</strong> a box plot showing how tweet volume per 30-minute interval is distributed within each hashtag, and
+    <strong>(right)</strong> a scatter plot of sentiment vs. tweet volume with an OLS regression line.
   </p>
-  <div id="chart"></div>
-</body>
+
+  <div class="row">
+    <div id="boxplot" style="height:480px;"></div>
+    <div id="scatter" style="height:480px;"></div>
+  </div>
+
 <script>
-Plotly.d3.csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminderDataFiveYear.csv', function (err, data) {
-  // Create a lookup table to sort and regroup the columns of data,
-  // first by year, then by continent:
-  var lookup = {};
-  function getData(year, continent) {
-    var byYear, trace;
-    if (!(byYear = lookup[year])) {;
-      byYear = lookup[year] = {};
-    }
-	 // If a container for this year + continent doesn't exist yet,
-	 // then create one:
-    if (!(trace = byYear[continent])) {
-      trace = byYear[continent] = {
-        x: [],
-        y: [],
-        id: [],
-        text: [],
-        marker: {size: []}
-      };
-    }
-    return trace;
-  }
+const rows = CORONA_TWEETS.map(d => ({
+  hashtag: d.hashtag,
+  tweet_count: +d.tweet_count,
+  avg_sentiment: +d.avg_sentiment
+}));
 
-  // Go through each row, get the right trace, and append the data:
-  for (var i = 0; i < data.length; i++) {
-    var datum = data[i];
-    var trace = getData(datum.year, datum.continent);
-    trace.text.push(datum.country);
-    trace.id.push(datum.country);
-    trace.x.push(datum.lifeExp);
-    trace.y.push(datum.gdpPercap);
-    trace.marker.size.push(datum.pop);
-  }
+// ---- Box plot: tweet_count grouped by hashtag ----
+const hashtags = Array.from(new Set(rows.map(d => d.hashtag)));
+const boxTraces = hashtags.map(h => ({
+  y: rows.filter(d => d.hashtag === h).map(d => d.tweet_count),
+  name: h,
+  type: "box",
+  boxpoints: "outliers"
+}));
+Plotly.newPlot("boxplot", boxTraces, {
+  title: "Tweet count distribution per hashtag",
+  yaxis: { title: "Tweets per 30 min" },
+  showlegend: false,
+  margin: { t: 50, l: 50, r: 20, b: 50 }
+}, { responsive: true });
 
-  // Get the group names:
-  var years = Object.keys(lookup);
-  // In this case, every year includes every continent, so we
-  // can just infer the continents from the *first* year:
-  var firstYear = lookup[years[0]];
-  var continents = Object.keys(firstYear);
+// ---- Scatter + OLS regression line ----
+// Compute slope/intercept manually so the trend line shows up.
+const xs = rows.map(d => d.avg_sentiment);
+const ys = rows.map(d => d.tweet_count);
+const n = xs.length;
+const meanX = d3.mean(xs), meanY = d3.mean(ys);
+const slope = d3.sum(xs.map((x, i) => (x - meanX) * (ys[i] - meanY))) /
+              d3.sum(xs.map(x => (x - meanX) ** 2));
+const intercept = meanY - slope * meanX;
 
-  // Create the main traces, one for each continent:
-  var traces = [];
-  for (i = 0; i < continents.length; i++) {
-    var data = firstYear[continents[i]];
-	 // One small note. We're creating a single trace here, to which
-	 // the frames will pass data for the different years. It's
-	 // subtle, but to avoid data reference problems, we'll slice
-	 // the arrays to ensure we never write any new data into our
-	 // lookup table:
-    traces.push({
-      name: continents[i],
-      x: data.x.slice(),
-      y: data.y.slice(),
-      id: data.id.slice(),
-      text: data.text.slice(),
-      mode: 'markers',
-      marker: {
-        size: data.marker.size.slice(),
-        sizemode: 'area',
-        sizeref: 200000
-      }
-    });
-  }
+// Pearson r for the annotation
+const sx = Math.sqrt(d3.sum(xs.map(x => (x - meanX) ** 2)) / (n - 1));
+const sy = Math.sqrt(d3.sum(ys.map(y => (y - meanY) ** 2)) / (n - 1));
+const r = d3.sum(xs.map((x, i) => (x - meanX) * (ys[i] - meanY))) / ((n - 1) * sx * sy);
 
-  // Create a frame for each year. Frames are effectively just
-  // traces, except they don't need to contain the *full* trace
-  // definition (for example, appearance). The frames just need
-  // the parts the traces that change (here, the data).
-  var frames = [];
-  for (i = 0; i < years.length; i++) {
-    frames.push({
-      name: years[i],
-      data: continents.map(function (continent) {
-        return getData(years[i], continent);
-      })
-    })
-  }
+const xLine = [d3.min(xs), d3.max(xs)];
+const yLine = xLine.map(x => slope * x + intercept);
 
-  // Now create slider steps, one for each frame. The slider
-  // executes a plotly.js API command (here, Plotly.animate).
-  // In this example, we'll animate to one of the named frames
-  // created in the above loop.
-  var sliderSteps = [];
-  for (i = 0; i < years.length; i++) {
-    sliderSteps.push({
-      method: 'animate',
-      label: years[i],
-      args: [[years[i]], {
-        mode: 'immediate',
-        transition: {duration: 300},
-        frame: {duration: 300, redraw: false},
-      }]
-    });
-  }
+const points = {
+  x: xs, y: ys, mode: "markers", type: "scatter",
+  name: "observations",
+  marker: { size: 6, opacity: 0.55,
+            color: rows.map(d => hashtags.indexOf(d.hashtag)) }
+};
+const line = {
+  x: xLine, y: yLine, mode: "lines", type: "scatter",
+  name: `OLS fit (r = ${r.toFixed(2)})`,
+  line: { width: 2, color: "#444" }
+};
 
-  var layout = {
-    height: 700,
-    xaxis: {
-      title: 'Life Expectancy',
-      range: [30, 85]
-    },
-    yaxis: {
-      title: 'GDP per Capita',
-      type: 'log'
-    },
-    hovermode: 'closest',
-	 // We'll use updatemenus (whose functionality includes menus as
-	 // well as buttons) to create a play button and a pause button.
-	 // The play button works by passing `null`, which indicates that
-	 // Plotly should animate all frames. The pause button works by
-	 // passing `[null]`, which indicates we'd like to interrupt any
-	 // currently running animations with a new list of frames. Here
-	 // The new list of frames is empty, so it halts the animation.
-    updatemenus: [{
-      x: 0,
-      y: 0,
-      yanchor: 'top',
-      xanchor: 'left',
-      showactive: false,
-      direction: 'left',
-      type: 'buttons',
-      pad: {t: 87, r: 10},
-      buttons: [{
-        method: 'animate',
-        args: [null, {
-          mode: 'immediate',
-          fromcurrent: true,
-          transition: {duration: 300},
-          frame: {duration: 500, redraw: false}
-        }],
-        label: 'Play'
-      }, {
-        method: 'animate',
-        args: [[null], {
-          mode: 'immediate',
-          transition: {duration: 0},
-          frame: {duration: 0, redraw: false}
-        }],
-        label: 'Pause'
-      }]
-    }],
-	 // Finally, add the slider and use `pad` to position it
-	 // nicely next to the buttons.
-    sliders: [{
-      pad: {l: 130, t: 55},
-      currentvalue: {
-        visible: true,
-        prefix: 'Year:',
-        xanchor: 'right',
-        font: {size: 20, color: '#666'}
-      },
-      steps: sliderSteps
-    }]
-  };
-
-  // Create the plot:
-  Plotly.plot('chart', {
-    data: traces,
-    layout: layout,
-    frames: frames,
-  });
-});
+Plotly.newPlot("scatter", [points, line], {
+  title: "Sentiment vs. tweet volume",
+  xaxis: { title: "Average sentiment" },
+  yaxis: { title: "Tweets per 30 min" },
+  margin: { t: 50, l: 50, r: 20, b: 50 },
+  legend: { x: 0.02, y: 0.98 }
+}, { responsive: true });
 </script>
+</body>
 </html>
